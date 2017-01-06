@@ -1,0 +1,51 @@
+YAML_FILE_INPUTS:
+  -
+    FILE_NAME: "ngn_global_variables.yaml"
+    NAME_SPACE: "NGN"
+  -
+    FILE_NAME: "drt_mmsc_postpaid_00001_tcvariables.yaml"
+    NAME_SPACE: "TC00001"
+
+                
+YAML_VARIABLE_INPUTS:
+  -
+     SETVAR: "YAML_MSISDN_A=$TC00001:PHONES:UEA:MSISDN_A"
+  -
+     SETVAR: "YAML_IMSI_A=$TC00001:PHONES:UEA:IMSI_A"
+  -
+     SETVAR: "YAML_MSISDN_B=$TC00001:PHONES:UEB:MSISDN_B"
+  -
+     SETVAR: "YAML_IMSI_B=$TC00001:PHONES:UEB:IMSI_B"
+  -
+     SETVAR: "YAML_PCAP_FILE=$TC00001:PCAP_FILES:PCAP"
+  -
+     SETVAR: "YAML_PCAP_LOCATION=$TC00001:PCAP_FILES:PCAP_FILE_LOCATION"
+
+READ_PCAP:
+  OPEN_PCAP_WITH_FILTER: "mmse or http"
+
+TEST_VALIDATIONS:
+  -
+    ORDER: 1
+    DESC: "M-SEND-REQ from Load Balancer to MMSC"
+    CONFIG:
+        FILE_NAME: "validation_m_send_req.yaml"
+        SETVAR: "YAML_IP_DST=$NGN:IPaddress:MMSC"
+    PASS_CRITERIA:
+        MANDATORY: "yes"
+        MISSING_PACKET_OK: "yes"
+        CONTINUE_ON_FAIL: "yes"
+        ON_FAIL_SKIP_TO: 3
+
+  -
+    ORDER: 2
+    DESC: "M-SEND-CONF from MMSC to Load Balancer"
+    CONFIG:
+        FILE_NAME: "validation_m_send_conf.yaml"
+        SETVAR: "YAML_IP_SRC=$NGN:IPaddress:MMSC"
+        START_FRAME:
+            GETVAR: "PACKET_NUM_MMSE_SEND_REQ"
+            MATCH: "greater"
+    PASS_CRITERIA:
+        ON_FAIL_SKIP_TO: 3
+
