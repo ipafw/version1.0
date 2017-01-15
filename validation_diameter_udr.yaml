@@ -1,0 +1,68 @@
+VALIDATIONS:
+  -
+    DESCRIPTION: "Validate diameter UDR"
+
+    IDENTIFY_PACKET:
+      IP_CHECK:
+        -
+          ORDER: 1
+          LAYER: "ip"
+          TYPE: "ip_check_src"
+          GETVAR: "YAML_IP_SRC"
+          MATCH: "exists"
+          ADVANCE_PARAMS:
+
+      PROTOCOL_CHECK:
+        -
+          ORDER: 2
+          LAYER: "diameter"
+          TYPE: "parse_header"
+          HEADER_NAME: "Command-Code"
+          VALUE: "306"
+          MATCH: "equals"
+          ADVANCE_PARAMS:
+            header_multiple: "false"
+
+        -
+          ORDER: 3
+          LAYER: "diameter"
+          TYPE: "parse_header"
+          HEADER_NAME: "User-Identity-MSISDN"
+          GETVAR: "YAML_MSISDN_A"
+          MATCH: "exists"
+          ADVANCE_PARAMS:
+            header_multiple: "false"
+
+    PARSE_PACKET:
+      PROTOCOL_CHECK:
+        -
+          ORDER: 4
+          LAYER: "diameter"
+          TYPE: "parse_header"
+          HEADER_NAME: "Session-Id"
+          SETVAR: "PACKET_DIAMETER_SESSION_ID"
+          ADVANCE_PARAMS:
+            header_multiple: "false"
+
+    VALIDATE_PACKET:
+      -
+        ORDER: 5
+        TYPE: "diameter_validation"
+        LAYER: "diameter"
+        DICTS:
+          -
+            key: "CMD_CODE"
+            value: "306"
+          -
+            key: "MSISDN"
+            GETVAR: "YAML_MSISDN_A"
+
+    POST_VALIDATION:
+      PROTOCOL_CHECK:
+        -
+          ORDER: 6
+          LAYER: "frame"
+          TYPE: "parse_header"
+          HEADER_NAME: "FRAME NUMBER"
+          SETVAR: "PACKET_NUM_DIAMETER_UDR"
+

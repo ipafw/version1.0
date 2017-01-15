@@ -1,0 +1,59 @@
+VALIDATIONS:
+  -
+    DESCRIPTION: "Validate diameter UDA"
+
+    IDENTIFY_PACKET:
+      IP_CHECK:
+        -
+          ORDER: 1
+          LAYER: "ip"
+          TYPE: "ip_check_dst"
+          GETVAR: "YAML_IP_DST"
+          MATCH: "exists"
+          ADVANCE_PARAMS:
+
+      PROTOCOL_CHECK:
+        -
+          ORDER: 2
+          LAYER: "diameter"
+          TYPE: "parse_header"
+          HEADER_NAME: "Command-Code"
+          VALUE: "306"
+          MATCH: "equals"
+          ADVANCE_PARAMS:
+            header_multiple: "false"
+
+        -
+          ORDER: 3
+          LAYER: "diameter"
+          TYPE: "parse_header"
+          HEADER_NAME: "Session-Id"
+          GETVAR: "PACKET_DIAMETER_SESSION_ID"
+          MATCH: "exists"
+          ADVANCE_PARAMS:
+            header_multiple: "false"
+
+#    PARSE_PACKET:
+
+    VALIDATE_PACKET:
+      -
+        ORDER: 5
+        TYPE: "diameter_validation"
+        LAYER: "diameter"
+        DICTS:
+          -
+            key: "SESSION_ID"
+            GETVAR: "PACKET_DIAMETER_SESSION_ID"
+          -
+            key: "EXPERIMENTAL_RESULT_CODE"
+            value: "5106"
+
+    POST_VALIDATION:
+      PROTOCOL_CHECK:
+        -
+          ORDER: 6
+          LAYER: "frame"
+          TYPE: "parse_header"
+          HEADER_NAME: "FRAME NUMBER"
+          SETVAR: "PACKET_NUM_DIAMETER_UDA"
+

@@ -62,13 +62,27 @@ TEST_VALIDATIONS:
           -
             SETVAR: "YAML_IP_SRC=$NGN:IPaddress:MMSC"
         START_FRAME:
-            GETVAR: "PACKET_NUM_MMSE_SEND_CONF"
+            GETVAR: "PACKET_NUM_MMSE_SEND_REQ"
             MATCH: "greater"
     PASS_CRITERIA:
         ON_FAIL_SKIP_TO: 5
 
   -
-    ORDER: 3
+    ORDER: 4
+    DESC: "Diameter User Data Answer from IN to MMSC"
+    CONFIG:
+        FILE_NAME: "validation_diameter_uda.yaml"
+        VARIABLES:
+          -
+            SETVAR: "YAML_IP_DST=$NGN:IPaddress:MMSC"
+        START_FRAME:
+            GETVAR: "PACKET_NUM_DIAMETER_UDR"
+            MATCH: "greater"
+    PASS_CRITERIA:
+        ON_FAIL_SKIP_TO: 5
+
+  -
+    ORDER: 5
     DESC: "M-NOTIFICATION-IND from MMSC to SMSC"
     CONFIG:
         FILE_NAME: "validation_m_notification_ind.yaml"
@@ -81,10 +95,10 @@ TEST_VALIDATIONS:
             GETVAR: "PACKET_NUM_MMSE_SEND_CONF"
             MATCH: "greater"
     PASS_CRITERIA:
-        ON_FAIL_SKIP_TO: 5
+        ON_FAIL_SKIP_TO: 6
 
   -
-    ORDER: 4
+    ORDER: 6
     DESC: "M-NOTIFIYRESP-IND to MMSC"
     CONFIG:
         FILE_NAME: "validation_m_notifyresp_ind.yaml"
@@ -95,10 +109,10 @@ TEST_VALIDATIONS:
             GETVAR: "PACKET_NUM_MMSE_NOTIFICATION_IND"
             MATCH: "greater"
     PASS_CRITERIA:
-        ON_FAIL_SKIP_TO: 5
+        ON_FAIL_SKIP_TO: 7
 
   -
-    ORDER: 5
+    ORDER: 7
     DESC: "M-RETRIEVE-CONF to MMSC"
     CONFIG:
         FILE_NAME: "validation_m_retrieve_conf.yaml"
@@ -109,10 +123,10 @@ TEST_VALIDATIONS:
             GETVAR: "PACKET_NUM_MMSE_NOTIFICATION_IND"
             MATCH: "greater"
     PASS_CRITERIA:
-        ON_FAIL_SKIP_TO: 6
+        ON_FAIL_SKIP_TO: 8
 
   -
-    ORDER: 6
+    ORDER: 8
     DESC: "M-DELIVERY-IND to MMSC"
     CONFIG:
         FILE_NAME: "validation_m_delivery_ind.yaml"
@@ -125,10 +139,10 @@ TEST_VALIDATIONS:
             GETVAR: "PACKET_NUM_MMSE_NOTIFICATION_IND"
             MATCH: "greater"
     PASS_CRITERIA:
-        ON_FAIL_SKIP_TO: 7
+        ON_FAIL_SKIP_TO: 9
 
   -
-    ORDER: 7
+    ORDER: 9
     DESC: "M-READ-REC-IND to MMSC"
     CONFIG:
         FILE_NAME: "validation_m_readrec_ind.yaml"
@@ -139,9 +153,6 @@ TEST_VALIDATIONS:
             GETVAR: "PACKET_NUM_MMSE_DELIVERY_IND"
             MATCH: "greater"
     PASS_CRITERIA:
-        ON_FAIL_SKIP_TO: 7
-
-
-
+        ON_FAIL_SKIP_TO: 10
 
 

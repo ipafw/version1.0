@@ -1,0 +1,33 @@
+PHONES:
+  UEA:
+    MSISDN_A:   "12010500082"
+    #MSISDN_A:   "4253196810"
+    IMSI_A:       "310310990010042"
+    SGSNIP:     "216.155.164.4"
+    CHARGINGID: "150995104"
+    DEV_ID:     "33005DA736E8139D"
+
+  UEB:
+    MSISDN_B:   "12010500081"
+    #MSISDN_B:   "2064465370"
+    IMSI_B:       "310310990010041"
+    SGSNIP:     "216.155.164.10"
+    CHARGINGID: "206919110"
+    DEV_ID:     "33002CA1258F23C5"
+
+PCAP_FILES:
+    PCAP: drt_mmsc_postpaid_00001.pcap
+    #PCAP: tc1_161105_0155.pcap
+    PCAP_FILE_LOCATION: /tmp/
+
+
+WIRESHARK:
+  WIRESHARK_IP: "10.25.17.8"
+  INTERFACE: 'eth2'
+  PORT: 22
+  USERNAME: ranthony
+  PASSWORD: "ranthony"
+  CAPTURE_FILTER: "'host 10.174.68.92 || host 10.174.68.84 || host 10.174.68.6 || host 10.174.50.69 || host 10.169.53.139 || host 10.168.210.90 || host 172.24.64.118 || host 10.169.53.146 || host 10.168.212.106 || host 10.168.210.88 || host 10.168.217.70 || host 172.16.74.22 || host 10.169.53.146 || host 172.18.74.22'"
+  DISPLAY_FILTER: "'mmse or http or smpp or gsm_sms_ud or wsp and not tcp.analysis.retransmission'"
+  DECODE_AS: "'tcp.port==10000,smpp'"
+  #THIS FILTER IS JK2 IN .8 SERVER

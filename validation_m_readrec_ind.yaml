@@ -1,0 +1,64 @@
+VALIDATIONS:
+  -
+    DESCRIPTION: "Validate MMSE M-READ-REC-IND method for reqired MSISDN"
+
+    IDENTIFY_PACKET:
+      IP_CHECK:
+        -
+          ORDER: 1
+          LAYER: "ip"
+          TYPE: "ip_check_dst"
+          GETVAR: "YAML_IP_DST"
+          MATCH: "exists"
+          ADVANCE_PARAMS:
+
+      PROTOCOL_CHECK:
+        -
+          ORDER: 2
+          LAYER: "mmse"
+          TYPE: "method_match"
+          METHOD_ID: "135"
+          METHOD_NAME: "m-read-rec-ind"
+          MATCH: "equals"
+          ADVANCE_PARAMS:
+
+        -
+          ORDER: 3
+          LAYER: "mmse"
+          TYPE: "parse_header"
+          HEADER_NAME: "Message-Id"
+          GETVAR: "PACKET_MMSE_MID"
+          MATCH: "equals"
+          ADVANCE_PARAMS:
+            header_multiple: "false"
+
+#    PARSE_PACKET:
+
+    VALIDATE_PACKET:
+      -
+        ORDER: 4
+        TYPE: "mmse_validation"
+        LAYER: "mmse"
+        DICTS:
+          -
+            key: "MESSAGE_TYPE"
+            value: "135"
+          -
+            key: "MESSAGE_ID"
+            GETVAR: "PACKET_MMSE_MID"
+          -
+            key: "TO"
+            GETVAR: "YAML_MSISDN_A"
+          -
+            key: "READ_STATUS"
+            value: "128"
+
+    POST_VALIDATION:
+      PROTOCOL_CHECK:
+        -
+          ORDER: 5
+          LAYER: "frame"
+          TYPE: "parse_header"
+          HEADER_NAME: "FRAME NUMBER"
+          SETVAR: "PACKET_NUM_MMSE_READREC_IND"
+

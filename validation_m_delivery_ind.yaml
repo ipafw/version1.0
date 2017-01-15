@@ -1,0 +1,76 @@
+VALIDATIONS:
+  -
+    DESCRIPTION: "Validate MMSE M-NOTIFICATION-IND method for reqired MSISDN"
+
+    IDENTIFY_PACKET:
+      IP_CHECK:
+        -
+          ORDER: 1
+          LAYER: "ip"
+          TYPE: "ip_check_src"
+          GETVAR: "YAML_IP_SRC"
+          MATCH: "exists"
+          ADVANCE_PARAMS:
+
+          ORDER: 1
+          LAYER: "ip"
+          TYPE: "ip_check_dst"
+          GETVAR: "YAML_IP_DST"
+          MATCH: "exists"
+          ADVANCE_PARAMS:
+
+      PROTOCOL_CHECK:
+        -
+          ORDER: 2
+          LAYER: "mmse"
+          TYPE: "method_match"
+          METHOD_ID: "134"
+          METHOD_NAME: "m-delivery-ind"
+          MATCH: "equals"
+          ADVANCE_PARAMS:
+
+        -
+          ORDER: 3
+          LAYER: "mmse"
+          TYPE: "parse_header"
+          HEADER_NAME: "Message-Id"
+          GETVAR: "PACKET_MMSE_MID"
+          MATCH: "equals"
+          ADVANCE_PARAMS:
+            header_multiple: "false"
+
+#    PARSE_PACKET:
+
+    VALIDATE_PACKET:
+      -
+        ORDER: 4
+        TYPE: "mmse_validation"
+        LAYER: "mmse"
+        DICTS:
+          -
+            key: "MESSAGE_ID"
+            GETVAR: "PACKET_MMSE_MID"
+          -
+            key: "TO"
+            GETVAR: "YAML_MSISDN_B"
+      -
+        ORDER: 5
+        TYPE: "mmse_validation"
+        LAYER: "smpp"
+        DICTS:
+          -
+            key: "SMPPDESTADDR"
+            GETVAR: "YAML_MSISDN_A"
+          -
+            key: "SMPPBIND"
+            value: "2300"
+
+    POST_VALIDATION:
+      PROTOCOL_CHECK:
+        -
+          ORDER: 6
+          LAYER: "frame"
+          TYPE: "parse_header"
+          HEADER_NAME: "FRAME NUMBER"
+          SETVAR: "PACKET_NUM_MMSE_DELIVERY_IND"
+

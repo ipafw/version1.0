@@ -5,18 +5,19 @@ import os
 import re
 
 import pyshark
-from robot.api                  import logger
-from robot.libraries.BuiltIn    import BuiltIn
+from robot.api                             import logger
+from robot.libraries.BuiltIn               import BuiltIn
 
-from collections                import OrderedDict
+from collections                           import OrderedDict
 
-from sip_message_validation     import SipMessageValidation
-from http_message_validation    import HTTPMessageValidation
-from cmn_Pass_Fail              import Pass_Fail,html_fail,html_pass,FAIL,PASS
-from parse_global_variables     import parse_TcVariable, ParseGlobalVariable
-from mmse_support_functions     import MMSESupportFunctions
-from mmse_message_validation    import MMSEMessageValidation
-from http_message_validation    import HTTPMessageValidation
+from sip_message_validation                import SipMessageValidation
+from http_message_validation               import HTTPMessageValidation
+from cmn_Pass_Fail                         import Pass_Fail,html_fail,html_pass,FAIL,PASS
+from parse_global_variables                import parse_TcVariable, ParseGlobalVariable
+from mmse_support_functions                import MMSESupportFunctions
+from mmse_message_validation               import MMSEMessageValidation
+from http_message_validation               import HTTPMessageValidation
+from diameter_message_validation           import DiameterMessageValidation
 
 
 class frameworkTestDriver () :
@@ -33,6 +34,8 @@ class frameworkTestDriver () :
         self.context_dict ["VARIABLES"]   = {}
         self.context_dict ["VALIDATIONS"] = {}
         self.result1                      = []
+        self.message                      = []
+        self.pass_fail_result             = []
 
         self.current_dict = self.readYAML (self.yaml_file)
         #print "yaml dict: ", self.current_dict
@@ -122,25 +125,25 @@ class frameworkTestDriver () :
         print pstr, "variable: ", yaml_variable ["SETVAR"]
 
         var, keys = yaml_variable ["SETVAR"].split ('=$')
-        #print pstr, "the var is: ", var
+        print pstr, "the var is: ", var
 
         keys_list = keys.split (':')
-        #print pstr, "key list first elem: ", keys_list [0]
+        print pstr, "key list first elem: ", keys_list [0]
 
         prefix = keys_list [0]
         if in_dict [prefix] != None :
             tmp_dict = in_dict
             #for key in keys.split (':') :
             for key in keys_list :
-                #print pstr, "\tkey is: ", key
-                #print pstr, "\tdict now is ", tmp_dict [key]
+                print pstr, "\tkey is: ", key
+                print pstr, "\tdict now is ", tmp_dict [key]
                 tmp_dict = tmp_dict [key]
 
             yaml_variable [var] = str (tmp_dict)
 
             # Set the evaluated variables directly in context_dict
             self.context_dict ["VARIABLES"][var] = str (tmp_dict)
-            #print pstr, var, "value is: " , self.context_dict ["YAML_VARIABLE_INPUTS"][var]
+            print pstr, var, ": value is: " , self.context_dict ["VARIABLES"][var]
             #print pstr, var, "value is: " , in_dict ["YAML_VARIABLE_INPUTS"][0]
         else :
             print pstr, "format issue"
@@ -164,12 +167,8 @@ class frameworkTestDriver () :
 
             self.context_dict ["VALIDATIONS"][validation ["ORDER"]] = self.readYAML (validation ["CONFIG"]["FILE_NAME"])
 
-            if "VARIABLES" in validation ["CONFIG"] :
-                print pstr, "\tconfig variables:", validation ["CONFIG"]["VARIABLES"]
-                for setvar in validation ["CONFIG"]["VARIABLES"] :
-                    print pstr, "\tconfig variables at :", setvar, " IS: ", validation ["CONFIG"]["VARIABLES"]
-                    self.evalSetVariable (validation ["CONFIG"]["VARIABLES"][setvar], in_dict)
-
+            #if "SETVAR" in validation ["CONFIG"] :
+            #    self.evalSetVariable (validation ["CONFIG"], in_dict)
             print pstr, "\tpass criteria:", validation ["PASS_CRITERIA"]
 
     def readPcap (self, in_dict, display_filter) :
@@ -180,7 +179,7 @@ class frameworkTestDriver () :
 
         in_dict ["PACKET_CAPTURE"] = pyshark.FileCapture(pcap_file, display_filter = display_filter)
 
-    def startYAMLTestValidation (self, in_dict) :
+    def startYAMLTestValidation (self, current_dict, in_dict) :
         pstr           = "frameworkTestDriver: startYAMLTestValidation: "
         frame_number   = None
         frame_position = None
@@ -188,6 +187,7 @@ class frameworkTestDriver () :
         self.mmse_mv_instance = MMSEMessageValidation ()
         self.http_mv_instance = HTTPMessageValidation ()
         self.mmse_sf_instance = MMSESupportFunctions  ()
+        self.dia_mv_instance  = DiameterMessageValidation ()
 
         for validation in in_dict ["TEST_VALIDATIONS"] :
             print pstr, "order: ", validation ["ORDER"]
@@ -195,6 +195,15 @@ class frameworkTestDriver () :
             print pstr, "\tconfig data:", validation ["CONFIG"]
 
             print pstr, "\tpass criteria:", validation ["PASS_CRITERIA"]
+
+            if "VARIABLES" in validation ["CONFIG"] :
+                print pstr, "\tconfig variables:", validation ["CONFIG"]["VARIABLES"]
+                for setvar in validation ["CONFIG"]["VARIABLES"] :
+                    print pstr, "\tconfig variables: ", setvar
+                    #self.evalSetVariable (setvar, in_dict)
+                    self.evalSetVariable (setvar, current_dict)
+            else :
+                print pstr, "\tconfig variables are not present"
 
             if "START_FRAME" in validation ["CONFIG"] :
                 if "GETVAR" in validation ["CONFIG"]["START_FRAME"] and \
@@ -207,7 +216,7 @@ class frameworkTestDriver () :
 
             self.startYAMLTestValidationPerFile (validation, in_dict, frame_number, frame_position)
 
-    self.message.append(self.mmse_mv_instance.updateResults(True,"----------------------------------------------------"))
+        self.message.append(self.mmse_mv_instance.updateResults(True,"----------------------------------------------------"))
 
     def startYAMLTestValidationPerFile (self, validation_per_file, in_dict, frame_number, frame_position) :
         pstr = "frameworkTestDriver: startYAMLTestValidationPerFile: "
@@ -313,38 +322,64 @@ class frameworkTestDriver () :
     def validatePacket (self, current_validation, in_dict, pkt) :
         pstr = "frameworkTestDriver: validatePacket: "
         #current_validation = in_dict ["VALIDATIONS"][validation ["ORDER"]]["VALIDATIONS"]
+        self.msg_body = []
+        result        = False
 
         print pstr, "VALIDATE PACKET DICTIONARY LIST: ", current_validation ["VALIDATE_PACKET"]
 
         msg = current_validation ["DESCRIPTION"]
 
+        print pstr,  msg
+
         for validate_dict in current_validation ["VALIDATE_PACKET"] :
             print pstr, "VALIDATE DICT: ", validate_dict
 
-            print "parseMSendReqMessage: M-SEND-REQ MESSAGE OF INTEREST: ", msg
-            validateParameters = OrderedDict()
-            for dict_elem in validate_dict :
-                #if 
-                ('REQUEST_METHOD', self.request_method),
-                ('REQUEST_URI', self.request_uri),
-                ('REQUEST_VERSION', self.request_version),
-                ('CONTENT_TYPE', self.content_type),
-                ('MSISDN', self.msisdn),
-                ('IMSI', main_self.imsiA)])
+            validate_parameters = OrderedDict()
+            for dict_elem in validate_dict ["DICTS"] :
+                print pstr, "DICT ELEM IS: ", dict_elem
 
-            self.msg_body = []
-            result = self.http_mv_instance.validateHTTPMessage(pkt, validateParameters, self.msg_body)
+                for key in dict_elem.keys () :
+                    print pstr, "KEY IS: ", key, " DICT ELEM KEY IS: ", dict_elem [key]
+                    if key == "key" :
+                        param_key = dict_elem [key]
+                    if key == "value" :
+                        param_val = dict_elem [key]
+                    if key == "GETVAR" :
+                        param_val = in_dict ["VARIABLES"][dict_elem [key]]
+
+                print pstr, "PARAM KEY: ", param_key, " PARAM VAL: ", param_val
+
+                validate_parameters [param_key] = param_val
+
+            print pstr, "ORDERED VALIDATE PARAM DICT: ", validate_parameters
+
+            if validate_dict ["LAYER"] == "http" :
+                result = self.http_mv_instance.validateHTTPMessage (pkt, validate_parameters, self.msg_body)
+
+            if validate_dict ["LAYER"] == "mmse" :
+                result = self.mmse_mv_instance.validateMMSEMessage (pkt, validate_parameters, self.msg_body)
+
+            if validate_dict ["LAYER"] == "diameter" :
+                result = self.dia_mv_instance.validateDiameterMessage (pkt, validate_parameters, self.msg_body)
+
+            if validate_dict ["LAYER"] == "smpp" :
+                result = self.mmse_mv_instance.validateMMSEMessage (pkt, validate_parameters, self.msg_body)
+
             self.result1.append(msg)
-            self.message.append(self.http_instance.updateResults(result, msg))
-            self.message.append(self.http_instance.updateResults('MsgBody',self.msg_body))
+            self.message.append(self.http_mv_instance.updateResults(result, msg))
+            self.message.append(self.http_mv_instance.updateResults('MsgBody',self.msg_body))
             self.pass_fail_result.append(PASS if result == True else msg)
 
         print "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n\n"
+
+        print pstr, "VALIDATE PACKET RESULT: ", self.result1
+        print pstr, "VALIDATE PACKET MESSAGE: ", self.message
+
         if result :
-            print pstr, "\t\t\t\t>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>VALIDATE PROTOCOL CHECK: PASSED, FRAME: ", pkt.frame_info.number, "\n"
+            print pstr, "\t\t\t\t>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>VALIDATE PACKET CHECK: PASSED, FRAME: ", pkt.frame_info.number, "\n"
             return True
         else :
-            print pstr, "\t\t\t\t>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>VALIDATE PROTOCOL CHECK: FAILED, FRAME: ", pkt.frame_info.number
+            print pstr, "\t\t\t\t>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>VALIDATE PACKET CHECK: FAILED, FRAME: ", pkt.frame_info.number
             return None
 
     def postValidation (self, current_validation, in_dict, pkt) :
@@ -409,22 +444,44 @@ class frameworkTestDriver () :
                 if protocol_check_dict ["LAYER"] == "mmse" :
                     hdr_value   = self.getMMSEHeaderValue (pkt, in_dict, protocol_check_dict)
 
+                if protocol_check_dict ["LAYER"] == "diameter" :
+                    hdr_value   = self.getDiameterHeaderValue (pkt, in_dict, protocol_check_dict)
+
                 if "SETVAR" in protocol_check_dict :
                     hdr_set_var = protocol_check_dict ["SETVAR"]
                     in_dict ["VARIABLES"][hdr_set_var] = hdr_value
 
-                if "GETVAR" in protocol_check_dict :
-                    hdr_get_var = protocol_check_dict ["GETVAR"]
-                    hdr_get_val = in_dict ["VARIABLES"][hdr_get_var]
-                    print pstr, "HEADER GETVAR IS: ", hdr_get_var, " HEADER GET VALUE IS: ", hdr_get_val
+                #NOTE: Check this below 'if' condition with 'MATCH' value in validation file
+                if "MATCH" in protocol_check_dict :
+                    if hdr_value == None :
+                        return None
 
-                    if hdr_get_val in hdr_value :
-                        result = result + 1
+                    match = protocol_check_dict ["MATCH"]
+                    print pstr, "MATCH VALUE IS: ", match
 
-                        print pstr, "HEADER NAME: ", protocol_check_dict ["HEADER_NAME"], " MATCHED: ", hdr_value
-                    else :
-                        print pstr, "HEADER NAME: ", protocol_check_dict ["HEADER_NAME"], " NOT MATCHED: ", hdr_value
-                        continue
+                    if "GETVAR" in protocol_check_dict :
+                        hdr_get_var = protocol_check_dict ["GETVAR"]
+                        hdr_get_val = in_dict ["VARIABLES"][hdr_get_var]
+                        print pstr, "HEADER GETVAR IS: ", hdr_get_var, " HEADER GET VALUE IS: ", hdr_get_val
+                    elif "VALUE" in protocol_check_dict :
+                        hdr_get_val = protocol_check_dict ["VALUE"]
+                        print pstr, "HEADER VALUE IS: ", hdr_get_val
+
+                    if match == "exists" :
+                        if hdr_get_val in hdr_value :
+                            result = result + 1
+                            print pstr, "HEADER NAME: ", protocol_check_dict ["HEADER_NAME"], " MATCHED: ", hdr_value
+                        else :
+                            print pstr, "HEADER NAME: ", protocol_check_dict ["HEADER_NAME"], " NOT MATCHED: ", hdr_value
+                            continue
+
+                    if match == "equals" :
+                        if hdr_get_val == hdr_value :
+                            result = result + 1
+                            print pstr, "HEADER NAME: ", protocol_check_dict ["HEADER_NAME"], " MATCHED: ", hdr_value
+                        else :
+                            print pstr, "HEADER NAME: ", protocol_check_dict ["HEADER_NAME"], " NOT MATCHED: ", hdr_value
+                            continue
 
 
         # We matched necessary src/dst checks. Skip rest of the packets
@@ -449,6 +506,23 @@ class frameworkTestDriver () :
         if hdr_name == "FRAME NUMBER" :
             return pkt.frame_info.number
 
+    def getDiameterHeaderValue (self, pkt, in_dict, protocol_check_dict) :
+        pstr = "frameworkTestDriver: getDiameterHeaderValue: "
+
+        if hasattr (pkt, 'diameter') == False :
+            return None
+
+        hdr_name = protocol_check_dict ["HEADER_NAME"]
+
+        if hdr_name == "Command-Code" :
+            return self.dia_mv_instance.getCommandCode (pkt)
+
+        if hdr_name == "User-Identity-MSISDN" :
+            return self.dia_mv_instance.getDiameterMSISDN (pkt)
+
+        if hdr_name == "Session-Id" :
+            return self.dia_mv_instance.getDiameterSessionID (pkt)
+
     def getHTTPHeaderValue (self, pkt, in_dict, protocol_check_dict) :
         pstr = "frameworkTestDriver: getHTTPHeaderValue: "
 
@@ -457,6 +531,12 @@ class frameworkTestDriver () :
         if hdr_name == "MSISDN" :
             return self.http_mv_instance.getMSISDN (pkt.http)
 
+        if hdr_name == "REQUEST_IN" :
+            return self.http_mv_instance.getHTTPRequestFrameIn (pkt)
+
+        if hdr_name == "REQUEST_URI" :
+            return self.http_mv_instance.getHTTPRequestURI (pkt)
+
     def getMMSEHeaderValue (self, pkt, in_dict, protocol_check_dict) :
         pstr = "frameworkTestDriver: getMMSEHeaderValue: "
         if hasattr (pkt, "mmse") == False :
@@ -464,10 +544,16 @@ class frameworkTestDriver () :
 
         hdr_name = protocol_check_dict ["HEADER_NAME"]
 
+        if hdr_name == "FROM" :
+            return self.mmse_mv_instance.getMMSEFrom (pkt)
+
+        if hdr_name == "TO" :
+            return self.mmse_mv_instance.getMMSETo (pkt)
+
         if hdr_name == "X-Mms-Transaction-ID" :
             return self.mmse_mv_instance.getMMSETransactionID (pkt)
 
-        if hdr_name == "Message-ID" :
+        if hdr_name == "Message-Id" :
             return self.mmse_mv_instance.getMMSEMessageID (pkt)
 
     def doIPCheck (self, pkt, in_dict, ip_check_list) :
@@ -540,7 +626,7 @@ class frameworkTestDriver () :
 
 if __name__ == '__main__':
     #obj = frameworkTestDriver ()
-    obj = frameworkTestDriver ("myyaml.yaml")
+    obj = frameworkTestDriver ("drt_mmsc_misc_00030.yaml")
 
     print " MSISDN A current dict: ", obj.current_dict ["YAML_VARIABLE_INPUTS"][0]["YAML_MSISDN_A"]
     print " MSISDN A context dict: ", obj.context_dict ["VARIABLES"]["YAML_MSISDN_A"]
@@ -560,8 +646,8 @@ if __name__ == '__main__':
     
     # Note these variables will bear only the last test validation that had set them
     # Each test validation may overwrite variables set in TEST_VALIATIONS section
-    print " YAML_IP_DST context dict: ", obj.context_dict ["VARIABLES"]["YAML_IP_DST"]
-    print " YAML_IP_SRC context dict: ", obj.context_dict ["VARIABLES"]["YAML_IP_SRC"]
+    #print " YAML_IP_DST context dict: ", obj.context_dict ["VARIABLES"]["YAML_IP_DST"]
+    #print " YAML_IP_SRC context dict: ", obj.context_dict ["VARIABLES"]["YAML_IP_SRC"]
 
     print " PCAP FILE NAME: ", obj.context_dict ["VARIABLES"]["YAML_PCAP_FILE"]
     print " PCAP LOCATION: ", obj.context_dict ["VARIABLES"]["YAML_PCAP_LOCATION"]
@@ -571,7 +657,7 @@ if __name__ == '__main__':
     obj.readPcap (obj.context_dict, obj.display_filter)
 
     #obj.startYAMLTestValidation (obj.context_dict ["VALIDATIONS"])
-    obj.startYAMLTestValidation (obj.context_dict)
+    obj.startYAMLTestValidation (obj.current_dict, obj.context_dict)
 
     '''
     obj.resetTestContext ()
