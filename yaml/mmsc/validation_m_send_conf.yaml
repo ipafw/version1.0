@@ -1,0 +1,133 @@
+VALIDATIONS:
+  -
+    DESCRIPTION: "Validate MMSE M-SEND-CONF method for reqired MSISDN"
+
+    IDENTIFY_PACKET:
+      IP_CHECK:
+        -
+          ORDER: 1
+          LAYER: "ip"
+          TYPE: "ip_check_src"
+          GETVAR: "YAML_IP_SRC"
+          MATCH: "exists"
+          ADVANCE_PARAMS:
+
+      PROTOCOL_CHECK:
+        -
+          ORDER: 2
+          LAYER: "mmse"
+          TYPE: "method_match"
+          METHOD_ID: "129"
+          METHOD_NAME: "m-send-conf"
+          MATCH: "equals"
+          ADVANCE_PARAMS:
+
+        -
+          ORDER: 3
+          LAYER: "mmse"
+          TYPE: "parse_header"
+          HEADER_NAME: "X-Mms-Transaction-ID"
+          GETVAR: "PACKET_MMSE_SEND_TID"
+          MATCH: "equals"
+          ADVANCE_PARAMS:
+            header_multiple: "false"
+
+    PARSE_PACKET:
+      PROTOCOL_CHECK:
+        -
+          ORDER: 4
+          LAYER: "mmse"
+          TYPE: "parse_header"
+          HEADER_NAME: "Message-ID"
+          SETVAR: "PACKET_MMSE_MID"
+          ADVANCE_PARAMS:
+            header_multiple: "false"
+
+    VALIDATE_PACKET:
+      -
+        ORDER: 5
+        TYPE: "http_validation"
+        LAYER: "http"
+        DICTS:
+          -
+            key: "RESPONSE_CODE"
+            value: "200"
+          -
+            key: "CONTENT_TYPE"
+            value: "application/vnd.wap.mms-message"
+
+    POST_VALIDATION:
+      PROTOCOL_CHECK:
+        -
+          ORDER: 6
+          LAYER: "frame"
+          TYPE: "parse_header"
+          HEADER_NAME: "FRAME NUMBER"
+          SETVAR: "PACKET_NUM_MMSE_SEND_CONF"
+
+  -
+    DESCRIPTION: "Validate MMSE M-SEND-CONF2 method for reqired MSISDN"
+
+    IDENTIFY_PACKET:
+      IP_CHECK:
+        -
+          ORDER: 1
+          LAYER: "ip"
+          TYPE: "ip_check_src"
+          GETVAR: "YAML_IP_SRC"
+          MATCH: "exists"
+          ADVANCE_PARAMS:
+
+      PROTOCOL_CHECK:
+        -
+          ORDER: 2
+          LAYER: "mmse"
+          TYPE: "method_match"
+          METHOD_ID: "129"
+          METHOD_NAME: "m-send-conf2"
+          MATCH: "equals"
+          ADVANCE_PARAMS:
+
+        -
+          ORDER: 3
+          LAYER: "mmse"
+          TYPE: "parse_header"
+          HEADER_NAME: "X-Mms-Transaction-ID"
+          GETVAR: "PACKET_MMSE_SEND_TID"
+          MATCH: "equals"
+          ADVANCE_PARAMS:
+            header_multiple: "false"
+
+    PARSE_PACKET:
+      PROTOCOL_CHECK:
+        -
+          ORDER: 4
+          LAYER: "mmse"
+          TYPE: "parse_header"
+          HEADER_NAME: "Message-Id"
+          SETVAR: "PACKET_MMSE_MID"
+          ADVANCE_PARAMS:
+            header_multiple: "false"
+
+    VALIDATE_PACKET:
+      -
+        ORDER: 5
+        TYPE: "http_validation"
+        LAYER: "http"
+        DICTS:
+          -
+            key: "RESPONSE_CODE"
+            value: "200"
+          -
+            key: "CONTENT_TYPE"
+            value: "application/vnd.wap.mms-message"
+
+    POST_VALIDATION:
+      PROTOCOL_CHECK:
+        -
+          ORDER: 6
+          LAYER: "frame"
+          TYPE: "parse_header"
+          HEADER_NAME: "FRAME NUMBER"
+          SETVAR: "PACKET_NUM_MMSE_SEND_CONF2"
+

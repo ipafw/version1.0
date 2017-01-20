@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot generated="20170117 19:21:00.556" generator="Robot 3.0 (Python 2.7.5 on linux2)">
+<suite source="/home/indra/mmsc/ipafw_v1.0.3/nwauto/domain/drt/mmsc/drt_mmsc_misc/drt_mmsc_misc_00030/drt_mmsc_misc_00030.txt" id="s1" name="Drt Mmsc Misc 00030">
+<test id="s1-t1" name="drt_mmsc_misc_00030">
+<kw name="Log" library="BuiltIn">
+<doc>Logs the given message with the given level.</doc>
+<arguments>
+<arg>TESTCASE INITIALIZE SECTION creates test case object and populate it with information from yaml file.</arg>
+</arguments>
+<msg timestamp="20170117 19:21:00.716" level="INFO">TESTCASE INITIALIZE SECTION creates test case object and populate it with information from yaml file.</msg>
+<status status="PASS" endtime="20170117 19:21:00.716" starttime="20170117 19:21:00.715"></status>
+</kw>
+<kw name="drt_mmsc_misc_00030.setup">
+<msg timestamp="20170117 19:21:00.721" level="FAIL">No keyword with name 'drt_mmsc_misc_00030.setup' found.</msg>
+<status status="FAIL" endtime="20170117 19:21:00.721" starttime="20170117 19:21:00.721"></status>
+</kw>
+<doc>Single line Registration This testcase verifies the single line registration in chrome browser</doc>
+<status status="FAIL" endtime="20170117 19:21:00.722" critical="yes" starttime="20170117 19:21:00.713">No keyword with name 'drt_mmsc_misc_00030.setup' found.</status>
+</test>
+<status status="FAIL" endtime="20170117 19:21:00.723" starttime="20170117 19:21:00.557"></status>
+</suite>
+<statistics>
+<total>
+<stat fail="1" pass="0">Critical Tests</stat>
+<stat fail="1" pass="0">All Tests</stat>
+</total>
+<tag>
+</tag>
+<suite>
+<stat fail="1" id="s1" name="Drt Mmsc Misc 00030" pass="0">Drt Mmsc Misc 00030</stat>
+</suite>
+</statistics>
+<errors>
+<msg timestamp="20170117 19:21:00.667" level="ERROR">Error in file '/home/indra/mmsc/ipafw_v1.0.3/nwauto/domain/drt/mmsc/drt_mmsc_misc/drt_mmsc_misc_00030/drt_mmsc_misc_00030.txt': Importing test library 'drt_mmsc_misc_00030' failed: ImportError: No module named mmse_support_functions
+Traceback (most recent call last):
+  File "/home/indra/mmsc/ipafw_v1.0.3/nwauto/domain/drt/mmsc/drt_mmsc_misc/drt_mmsc_misc_00030/drt_mmsc_misc_00030.py", line 5, in &lt;module&gt;
+    from common.ipafw                          import frameworkTestDriver
+  File "/home/indra/mmsc/ipafw_v1.0.3/common/ipafw.py", line 21, in &lt;module&gt;
+    from common.ipafw_parse_test_yaml          import ipafwParseTestYaml
+  File "/home/indra/mmsc/ipafw_v1.0.3/common/ipafw_parse_test_yaml.py", line 17, in &lt;module&gt;
+    from mmse_support_functions                import MMSESupportFunctions
+PYTHONPATH:
+  /usr/bin
+  /home/indra/mmsc/ipafw_v1.0.3/nwauto/domain/drt/mmsc/drt_mmsc_misc/drt_mmsc_misc_00030
+  /home/indra/mmsc/ipafw_v1.0.3
+  /home/indra/nwauto/lib
+  /var/www/html/official/nwauto/lib
+  /opt/customserver
+  /home/indra/nwauto/gbl
+  /usr/lib64/python27.zip
+  /usr/lib64/python2.7
+  /usr/lib64/python2.7/plat-linux2
+  /usr/lib64/python2.7/lib-tk
+  /usr/lib64/python2.7/lib-old
+  /usr/lib64/python2.7/lib-dynload
+  /usr/lib64/python2.7/site-packages
+  /usr/lib64/python2.7/site-packages/gtk-2.0
+  /usr/lib/python2.7/site-packages
+  /usr/lib/python2.7/site-packages/pyshark-0.3.6.1-py2.7.egg</msg>
+</errors>
+</robot>

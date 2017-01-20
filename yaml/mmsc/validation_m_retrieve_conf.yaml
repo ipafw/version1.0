@@ -1,0 +1,132 @@
+VALIDATIONS:
+  -
+    DESCRIPTION: "Validate MMSE M-RETRIEVE-CONF 200 OK method for reqired MSISDN"
+
+    IDENTIFY_PACKET:
+      IP_CHECK:
+        -
+          ORDER: 1
+          LAYER: "ip"
+          TYPE: "ip_check_src"
+          GETVAR: "YAML_IP_SRC"
+          MATCH: "exists"
+          ADVANCE_PARAMS:
+
+      PROTOCOL_CHECK:
+        -
+          ORDER: 2
+          LAYER: "mmse"
+          TYPE: "method_match"
+          METHOD_ID: "132"
+          METHOD_NAME: "m-retrieve-conf"
+          MATCH: "equals"
+          ADVANCE_PARAMS:
+
+        -
+          ORDER: 3
+          LAYER: "mmse"
+          TYPE: "parse_header"
+          HEADER_NAME: "Message-Id"
+          GETVAR: "PACKET_MMSE_MID"
+          MATCH: "equals"
+          ADVANCE_PARAMS:
+            header_multiple: "false"
+
+    PARSE_PACKET:
+      PROTOCOL_CHECK:
+        -
+          ORDER: 4
+          LAYER: "http"
+          TYPE: "parse_header"
+          HEADER_NAME: "REQUEST_IN"
+          SETVAR: "PACKET_HTTP_REQUEST_IN_FRAME"
+          ADVANCE_PARAMS:
+            header_multiple: "false"
+
+    VALIDATE_PACKET:
+      -
+        ORDER: 5
+        TYPE: "http_validation"
+        LAYER: "http"
+        DICTS:
+          -
+            key: "RESPONSE_CODE"
+            value: "200"
+          -
+            key: "CONTENT_TYPE"
+            value: "application/vnd.wap.mms-message"
+      -
+        ORDER: 6
+        TYPE: "mmse_validation"
+        LAYER: "mmse"
+        DICTS:
+          -
+            key: "MESSAGE_TYPE"
+            value: "132"
+          -
+            key: "MESSAGE_ID"
+            GETVAR: "PACKET_MMSE_MID"
+          -
+            key: "TO"
+            GETVAR: "YAML_MSISDN_B"
+          -
+            key: "FROM"
+            GETVAR: "YAML_MSISDN_A"
+
+
+    POST_VALIDATION:
+      PROTOCOL_CHECK:
+        -
+          ORDER: 6
+          LAYER: "frame"
+          TYPE: "parse_header"
+          HEADER_NAME: "FRAME NUMBER"
+          SETVAR: "PACKET_NUM_MMSE_RETRIEVE_CONF_200OK"
+
+  -
+    DESCRIPTION: "Validate MMSE M-RETRIEVE-CONF GET method for reqired MSISDN"
+
+    IDENTIFY_PACKET:
+      IP_CHECK:
+        -
+          ORDER: 1
+          LAYER: "ip"
+          TYPE: "ip_check_dst"
+          GETVAR: "YAML_IP_DST"
+          MATCH: "exists"
+          ADVANCE_PARAMS:
+
+      PROTOCOL_CHECK:
+        -
+          ORDER: 2
+          LAYER: "frame"
+          TYPE: "parse_header"
+          HEADER_NAME: "FRAME NUMBER"
+          GETVAR: "PACKET_HTTP_REQUEST_IN_FRAME"
+          MATCH: "equals"
+          ADVANCE_PARAMS:
+
+#    PARSE_PACKET:
+
+    VALIDATE_PACKET:
+      -
+        ORDER: 3
+        TYPE: "http_validation"
+        LAYER: "http"
+        DICTS:
+          -
+            key: "REQUEST_METHOD"
+            value: "GET"
+          -
+            key: "MSISDN"
+            GETVAR: "YAML_MSISDN_B"
+
+    POST_VALIDATION:
+      PROTOCOL_CHECK:
+        -
+          ORDER: 4
+          LAYER: "frame"
+          TYPE: "parse_header"
+          HEADER_NAME: "FRAME NUMBER"
+          SETVAR: "PACKET_NUM_MMSE_RETRIEVE_CONF_GET"
+

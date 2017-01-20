@@ -1,0 +1,41 @@
+PHONES_TEST:
+  UEA:
+    MSISDN_A:   "12064465370"
+    IMSI:       "310260564154655"
+    SGSNIP:     "216.155.164.8"
+    CHARGINGID: "89478486"
+
+  UEB:
+    MSISDN_B:   "14253196810"
+    IMSI:       "310260549276210"
+    SGSNIP:     "216.155.164.7"
+    CHARGINGID: "100663391"
+
+PHONES:
+  UEA:
+    MSISDN_A:   "12010500100"
+    IMSI:       "310310990010060"
+    SGSNIP:     "216.155.164.10"
+    CHARGINGID: "206919110"
+    DEV_ID:     "33002CA1258F23C5"
+
+  UEB:
+    MSISDN_B:   "12010500082"
+    IMSI:       "310310990010042"
+    SGSNIP:     "216.155.164.4"
+    CHARGINGID: "150995104"
+    DEV_ID:     "33005DA736E8139D"
+
+PCAP_FILES:
+    PCAP:       "drt_mmsc_misc_00030.pcap"
+    PCAP_FILE_LOCATION: /tmp/
+
+WIRESHARK:
+  WIRESHARK_IP: "10.25.17.8"
+  INTERFACE: 'eth2'
+  USERNAME: ranthony
+  PASSWORD: "ranthony"
+  PORT: 22
+  DISPLAY_FILTER: "'mmse or http or diameter.cmd.code==306 or smpp or gsm_sms_ud or wsp and not tcp.analysis.retransmission'"
+  DECODE_AS: "'tcp.port==10000,smpp'"
+  CAPTURE_FILTER: "'host 10.174.68.40 || host 66.94.14.244 || host 66.94.13.123 || host 10.174.50.68 || host 10.168.210.90 || host 10.168.217.78 || host 10.174.58.70 || host 10.174.58.71 || host 10.174.58.90 || host 10.174.58.91 || host 10.174.58.68 || host 10.174.58.69 || host 10.174.58.88 || host 10.174.58.89 || host 10.168.217.84 || host 10.168.217.85 || host 10.174.68.73 || host 10.174.68.73 || host 10.174.68.74 || host 10.174.68.93 || host 10.174.68.84 || host 10.174.68.85 || host 10.168.210.88 || host 10.168.217.70 || host 172.18.74.22 || host 10.169.53.146 || host 10.169.53.139 || host 10.168.212.106 || host 10.174.53.142 || host 66.94.3.68 || host 10.174.68.92 || host 10.174.68.6 || host 10.174.50.69 || host 172.24.64.118 || host 172.16.74.22'"
