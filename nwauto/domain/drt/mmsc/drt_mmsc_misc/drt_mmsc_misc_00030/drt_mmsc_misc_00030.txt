@@ -1,0 +1,14 @@
+*** Settings ***
+Library           drt_mmsc_misc_00030
+Variables         drt_mmsc_misc_00030_tcvariables.yaml
+Variables         ngn_global_variables.yaml
+
+*** Test Cases ***
+drt_mmsc_misc_00030
+    [Documentation]    Single line Registration This testcase verifies the single line registration in chrome browser
+    Log    TESTCASE INITIALIZE SECTION creates test case object and populate it with information from yaml file.
+    drt_mmsc_misc_00030.setup
+    drt_mmsc_misc_00030.perfectoSteps
+    drt_mmsc_misc_00030.pcapParsingSteps
+    drt_mmsc_misc_00030.displayResults
+
